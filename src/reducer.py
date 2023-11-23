@@ -1,8 +1,11 @@
 
 
-class FluorescenceReducer():
+class FluorescenceReducer:
     def __init__(self):
-        self.map = {}
+        self.result = {"map":[]}
 
     def process_data(self, data):
-        print(data)
+        self.result["map"].append(data)
+
+    def __del__(self):
+        print(self.result["map"])

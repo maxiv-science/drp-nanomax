@@ -4,7 +4,7 @@ import h5py
 import zmq
 from h5py import Dataset
 
-from dranspose.data.event import StreamData, EventData
+from dranspose.event import StreamData, EventData
 
 from worker import FluorescenceWorker
 from reducer import FluorescenceReducer
@@ -24,11 +24,9 @@ def build_frame(dsets: list[Dataset]):
         yield frame
         i+=1
 
-print(h5py.__version__)
-
 with h5py.File("../000008.h5") as f:
-    print(f["entry/measurement"].keys())
-    print(f["entry/measurement/xspress3/data"][0].shape)
+    #print(f["entry/measurement"].keys())
+    #print(f["entry/measurement/xspress3/data"][0].shape)
     pseudo = f["entry/measurement/pseudo"]
 
     positiongen = build_frame([f["entry/measurement/pseudo/x"],
@@ -37,7 +35,7 @@ with h5py.File("../000008.h5") as f:
     energygen = build_frame([f["entry/measurement/xspress3/data"]])
 
 
-    worker = FluorescenceWorker(name="offline")
+    worker = FluorescenceWorker()
     reducer = FluorescenceReducer()
 
     i = 0
