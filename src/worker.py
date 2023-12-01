@@ -43,13 +43,15 @@ class FluorescenceWorker:
             sx, sy = con.pseudo["x"][0], con.pseudo["y"][0]
             logger.debug("process position %s %s", sx, sy)
 
-            print(spec.data[3])
+            #print(spec.data[3])
             res = self.fastFit.fitMultipleSpectra(y=spec.data[3],
                                        weight=0,
                                        refit=1,
                                        concentrations=1)
 
-            return {"position": (sx, sy), "fit": res}
+            result = res.__dict__
+            del result["_labelFormats"]
+            return {"position": (sx, sy), "fit": result}
 
     def finish(self, parameters=None):
         print("finished")
