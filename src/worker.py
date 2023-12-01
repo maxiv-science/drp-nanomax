@@ -38,13 +38,13 @@ class FluorescenceWorker:
         logger.debug("contrast: %s", con)
         logger.debug("spectrum: %s", spec)
 
-        if con["status"] == "running":
+        if con.status == "running":
             # new data
-            sx, sy = con["pseudo"]["x"][0], con["pseudo"]["y"][0]
+            sx, sy = con.pseudo["x"][0], con.pseudo["y"][0]
             logger.debug("process position %s %s", sx, sy)
 
-            print(spec[1][3])
-            res = self.fastFit.fitMultipleSpectra(y=spec[1][3],
+            print(spec.data[3])
+            res = self.fastFit.fitMultipleSpectra(y=spec.data[3],
                                        weight=0,
                                        refit=1,
                                        concentrations=1)
