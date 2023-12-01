@@ -1,6 +1,8 @@
 import json
 import logging
 
+from PyMca5.PyMcaIO import ConfigDict
+from PyMca5.PyMcaPhysics.xrf.FastXRFLinearFit import FastXRFLinearFit
 from dranspose.event import EventData
 from dranspose.middlewares import contrast
 from dranspose.middlewares import xspress
@@ -10,8 +12,10 @@ logger = logging.getLogger(__name__)
 
 
 class FluorescenceWorker:
-    def __init__(self):
+    def __init__(self, parameters=None):
         self.number = 0
+        self.fastFit = FastXRFLinearFit()
+        self.fastFit.setFitConfiguration(parameters["mca_config"])
 
     def process_event(self, event: EventData, parameters=None):
         logger.debug("using parameters %s", parameters)
@@ -39,9 +43,13 @@ class FluorescenceWorker:
             sx, sy = con["pseudo"]["x"][0], con["pseudo"]["y"][0]
             logger.debug("process position %s %s", sx, sy)
 
-            roi1 = spec[1][3][parameters["roi1"][0] : parameters["roi1"][1]].sum()
+            print(spec[1][3])
+            res = self.fastFit.fitMultipleSpectra(y=spec[1][3],
+                                       weight=0,
+                                       refit=1,
+                                       concentrations=1)
 
-            return {"position": (sx, sy), "concentations": {"roi1": roi1}}
+            return {"position": (sx, sy), "fit": res}
 
     def finish(self, parameters=None):
         print("finished")
