@@ -6,7 +6,6 @@ class FluorescenceReducer:
         self.publish = {"map": {}}
 
     def process_result(self, result: ResultData, parameters=None):
-        print(result)
         if result.payload:
             self.publish["map"][result.payload["position"]] = result.payload[
                 "concentations"
@@ -14,3 +13,4 @@ class FluorescenceReducer:
 
     def finish(self, parameters=None):
         print("finished reducer")
+        print(self.publish)
