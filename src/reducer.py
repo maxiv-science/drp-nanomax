@@ -1,11 +1,16 @@
+from dranspose.event import ResultData
 
 
 class FluorescenceReducer:
     def __init__(self):
-        self.result = {"map":[]}
+        self.publish = {"map": {}}
 
-    def process_data(self, data):
-        self.result["map"].append(data)
+    def process_result(self, result: ResultData, parameters=None):
+        print(result)
+        if result.payload:
+            self.publish["map"][result.payload["position"]] = result.payload[
+                "concentations"
+            ]
 
-    def __del__(self):
-        print(self.result["map"])
+    def finish(self, parameters=None):
+        print("finished reducer")

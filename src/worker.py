@@ -1,28 +1,47 @@
 import json
+import logging
 
 from dranspose.event import EventData
-
+from dranspose.middlewares import contrast
+from dranspose.middlewares import xspress
 import numpy as np
 
-class FluorescenceWorker:
+logger = logging.getLogger(__name__)
 
+
+class FluorescenceWorker:
     def __init__(self):
         self.number = 0
 
-    def process_event(self, event: EventData, parameters = None):
-        #print(event)
+    def process_event(self, event: EventData, parameters=None):
+        logger.debug("using parameters %s", parameters)
+        if {"contrast", "xspress3"} - set(event.streams.keys()) != set():
+            logger.error(
+                "missing streams for this worker, only present %s", event.streams.keys()
+            )
+            return
+        try:
+            con = contrast.parse(event.streams["contrast"])
+        except Exception as e:
+            logger.error("failed to parse contrast %s", e.__repr__())
+            return
 
-        ps = event.streams["position"]
-        assert ps.typ == "motors"
-        positions = json.loads(ps.frames[0].bytes)
-        #print(positions)
+        try:
+            spec = xspress.parse(event.streams["xspress3"])
+        except Exception as e:
+            logger.error("failed to parse xspress3 %s", e.__repr__())
+            return
+        logger.debug("contrast: %s", con)
+        logger.debug("spectrum: %s", spec)
 
-        es = event.streams["energy"]
-        assert es.typ == "xspress3"
-        header = json.loads(es.frames[0].bytes)
-        spectra = np.frombuffer(es.frames[1].bytes, dtype=header["dtype"]).reshape(header["shape"])
+        if con["status"] == "running":
+            # new data
+            sx, sy = con["pseudo"]["x"][0], con["pseudo"]["y"][0]
+            logger.debug("process position %s %s", sx, sy)
 
-        #print(spectra[3])
+            roi1 = spec[1][3][parameters["roi1"][0] : parameters["roi1"][1]].sum()
 
-        return {"position": positions,
-                "concentrations": {"Fe": spectra[3][100:200].sum(), "As": spectra[3][200:300].sum()}}
+            return {"position": (sx, sy), "concentations": {"roi1": roi1}}
+
+    def finish(self, parameters=None):
+        print("finished")
