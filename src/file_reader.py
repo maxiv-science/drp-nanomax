@@ -9,7 +9,7 @@ from PyMca5.PyMcaIO import ConfigDict
 from h5py import Dataset
 
 from dranspose.event import StreamData, EventData, ResultData
-from dranspose.data.xspress3_stream import XspressPacket
+from dranspose.data.contrast import ContrastStarted
 
 from worker import FluorescenceWorker
 from reducer import FluorescenceReducer
@@ -31,10 +31,14 @@ def build_frame(dsets: list[Dataset]):
         i += 1
 
 
-cfg = ConfigDict.ConfigDict()
-ffile = "../fit_config_scan_000027_0.1_second_some_elements_removed.cfg"
-cfg.read(ffile)
-parameters={"mca_config": cfg}
+#cfg = ConfigDict.ConfigDict()
+with open("../fit_config_scan_000027_0.1_second_some_elements_removed.cfg", "rb") as f:
+    content = f.read()
+#ffile =
+#cfg.read(ffile)
+
+
+parameters={"mca_config_file": content}
 
 with h5py.File("../000008.h5") as f:
     # print(f["entry/measurement"].keys())
@@ -55,7 +59,7 @@ with h5py.File("../000008.h5") as f:
 
     i = 0
 
-    contrast_start = pickle.dumps({'status': 'started'})
+    contrast_start = pickle.dumps(ContrastStarted(path="", scannr=4, description="stepscan"))
     contrast = StreamData(typ="contrast", frames=[contrast_start])
     xspress_start = json.dumps({'htype': 'header','filename':""})
     xspress = StreamData(typ="xspress", frames=[xspress_start])
@@ -67,7 +71,7 @@ with h5py.File("../000008.h5") as f:
         event_number=i,
         worker=b'development',
         payload=data,
-        parameters_uuid=uuid.uuid4(),
+        parameters_hash="asd",
     )
 
     reducer.process_result(rd, parameters=parameters)
@@ -92,7 +96,7 @@ with h5py.File("../000008.h5") as f:
         ]
 
         #posframe = zmq.Frame(json.dumps(pos).encode("utf8"))
-        ctr = {"pseudo":{k:np.array([v]) for k,v in pos.items()}, "status":"running"}
+        ctr = {"pseudo":{k:np.array([v]) for k,v in pos.items()}, "status":"running", "dt":0.4}
 
         ms = StreamData(typ="contrast", frames=[zmq.Frame(pickle.dumps(ctr))])
         xs = StreamData(typ="xspress", frames=energyframes)
@@ -104,7 +108,7 @@ with h5py.File("../000008.h5") as f:
             event_number=i,
             worker=b'development',
             payload=data,
-            parameters_uuid=uuid.uuid4(),
+            parameters_hash="asd",
         )
 
         reducer.process_result(rd, parameters=parameters)
@@ -126,7 +130,7 @@ with h5py.File("../000008.h5") as f:
         event_number=i,
         worker=b'development',
         payload=data,
-        parameters_uuid=uuid.uuid4(),
+        parameters_hash="asd",
     )
 
     reducer.process_result(rd, parameters=parameters)

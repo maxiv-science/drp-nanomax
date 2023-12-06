@@ -1,21 +1,33 @@
 import json
 import logging
+import tempfile
 
 from PyMca5.PyMcaIO import ConfigDict
 from PyMca5.PyMcaPhysics.xrf.FastXRFLinearFit import FastXRFLinearFit
 from dranspose.event import EventData
 from dranspose.middlewares import contrast
 from dranspose.middlewares import xspress
+from dranspose.parameters import StrParameter, FileParameter
 import numpy as np
 
 logger = logging.getLogger(__name__)
 
 
 class FluorescenceWorker:
+
+    @staticmethod
+    def describe_parameters():
+        params = [
+            FileParameter(name="mca_config"),
+        ]
+        return params
+
     def __init__(self, parameters=None):
         self.number = 0
         self.fastFit = FastXRFLinearFit()
-        self.fastFit.setFitConfiguration(parameters["mca_config"])
+        with tempfile.NamedTemporaryFile() as fp:
+            fp.write(parameters["mca_config_file"])
+            self.fastFit.setFitConfigurationFile(fp.name)
 
     def process_event(self, event: EventData, parameters=None):
         logger.debug("using parameters %s", parameters)
