@@ -26,7 +26,7 @@ class FluorescenceWorker:
         self.number = 0
         self.fastFit = FastXRFLinearFit()
         with tempfile.NamedTemporaryFile() as fp:
-            fp.write(parameters["mca_config_file"])
+            fp.write(parameters["mca_config_file"].data)
             self.fastFit.setFitConfigurationFile(fp.name)
 
     def process_event(self, event: EventData, parameters=None):

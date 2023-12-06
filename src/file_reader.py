@@ -10,6 +10,7 @@ from h5py import Dataset
 
 from dranspose.event import StreamData, EventData, ResultData
 from dranspose.data.contrast import ContrastStarted
+from dranspose.protocol import WorkParameter
 
 from worker import FluorescenceWorker
 from reducer import FluorescenceReducer
@@ -38,7 +39,7 @@ with open("../fit_config_scan_000027_0.1_second_some_elements_removed.cfg", "rb"
 #cfg.read(ffile)
 
 
-parameters={"mca_config_file": content}
+parameters={"mca_config_file": WorkParameter(name="mca_config_file", data=content)}
 
 with h5py.File("../000008.h5") as f:
     # print(f["entry/measurement"].keys())
