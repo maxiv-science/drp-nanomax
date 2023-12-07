@@ -64,7 +64,7 @@ with h5py.File("../000008.h5") as f:
     contrast = StreamData(typ="contrast", frames=[contrast_start])
     xspress_start = json.dumps({'htype': 'header','filename':""})
     xspress = StreamData(typ="xspress", frames=[xspress_start])
-    ev = EventData(event_number=i, streams={"contrast": contrast, "xspress3": xspress})
+    ev = EventData(event_number=i, streams={"contrast": contrast, "x3mini": xspress})
 
     data = worker.process_event(ev, parameters=parameters)
 
@@ -101,7 +101,7 @@ with h5py.File("../000008.h5") as f:
 
         ms = StreamData(typ="contrast", frames=[zmq.Frame(pickle.dumps(ctr))])
         xs = StreamData(typ="xspress", frames=energyframes)
-        ev = EventData(event_number=i, streams={"contrast": ms, "xspress3": xs})
+        ev = EventData(event_number=i, streams={"contrast": ms, "x3mini": xs})
 
         data = worker.process_event(ev, parameters=parameters)
 
@@ -123,7 +123,7 @@ with h5py.File("../000008.h5") as f:
     contrast = StreamData(typ="contrast", frames=[contrast_end])
     xspress_end = json.dumps({'htype': 'series_end'})
     xspress = StreamData(typ="xspress", frames=[xspress_end])
-    ev = EventData(event_number=i, streams={"contrast": contrast, "xspress3": xspress})
+    ev = EventData(event_number=i, streams={"contrast": contrast, "x3mini": xspress})
 
     data = worker.process_event(ev, parameters=parameters)
 

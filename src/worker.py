@@ -5,6 +5,7 @@ import tempfile
 from PyMca5.PyMcaIO import ConfigDict
 from PyMca5.PyMcaPhysics.xrf.FastXRFLinearFit import FastXRFLinearFit
 from dranspose.event import EventData
+from dranspose.data.xspress3 import XspressStart
 from dranspose.middlewares import contrast
 from dranspose.middlewares import xspress
 from dranspose.parameters import StrParameter, FileParameter
@@ -31,7 +32,7 @@ class FluorescenceWorker:
 
     def process_event(self, event: EventData, parameters=None):
         logger.debug("using parameters %s", parameters)
-        if {"contrast", "xspress3"} - set(event.streams.keys()) != set():
+        if {"contrast"} - set(event.streams.keys()) != set():
             logger.error(
                 "missing streams for this worker, only present %s", event.streams.keys()
             )
@@ -42,10 +43,31 @@ class FluorescenceWorker:
             logger.error("failed to parse contrast %s", e.__repr__())
             return
 
+        channel = None
         try:
-            spec = xspress.parse(event.streams["xspress3"])
+            if "xspress3" in event.streams:
+                spec = xspress.parse(event.streams["xspress3"])
+                if isinstance(spec, XspressStart):
+                    logger.info("ignore start message")
+                    return
+                channel = spec.data[3]
         except Exception as e:
             logger.error("failed to parse xspress3 %s", e.__repr__())
+            return
+
+        try:
+            if "x3mini" in event.streams:
+                spec = xspress.parse(event.streams["x3mini"])
+                if isinstance(spec, XspressStart):
+                    logger.info("ignore start message")
+                    return
+                channel = spec.data[1]
+        except Exception as e:
+            logger.error("failed to parse x3mini %s", e.__repr__())
+            return
+
+        if channel is None:
+            logger.error("failed to parse xspress3 or x3mini spectrum")
             return
         logger.debug("contrast: %s", con)
         logger.debug("spectrum: %s", spec)
@@ -56,7 +78,7 @@ class FluorescenceWorker:
             logger.debug("process position %s %s", sx, sy)
 
             #print(spec.data[3])
-            res = self.fastFit.fitMultipleSpectra(y=spec.data[3],
+            res = self.fastFit.fitMultipleSpectra(y=channel,
                                        weight=0,
                                        refit=1,
                                        concentrations=1)
