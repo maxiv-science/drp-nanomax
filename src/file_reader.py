@@ -1,5 +1,6 @@
 import json
 import pickle
+import random
 import uuid
 
 import h5py
@@ -55,7 +56,7 @@ with h5py.File("../000008.h5") as f:
     )
     energygen = build_frame([f["entry/measurement/xspress3/data"]])
 
-    worker = FluorescenceWorker(parameters=parameters)
+    workers = [FluorescenceWorker(parameters=parameters) for  _ in range(2)]
     reducer = FluorescenceReducer(parameters=parameters)
 
     i = 0
@@ -66,16 +67,16 @@ with h5py.File("../000008.h5") as f:
     xspress = StreamData(typ="xspress", frames=[xspress_start])
     ev = EventData(event_number=i, streams={"contrast": contrast, "x3mini": xspress})
 
-    data = worker.process_event(ev, parameters=parameters)
+    for wi, worker in enumerate(workers):
+        data = worker.process_event(ev, parameters=parameters)
+        rd = ResultData(
+            event_number=i,
+            worker=f"worker{wi}",
+            payload=data,
+            parameters_hash="asd",
+        )
 
-    rd = ResultData(
-        event_number=i,
-        worker=b'development',
-        payload=data,
-        parameters_hash="asd",
-    )
-
-    reducer.process_result(rd, parameters=parameters)
+        reducer.process_result(rd, parameters=parameters)
 
     i+= 1
     while True:
@@ -103,11 +104,12 @@ with h5py.File("../000008.h5") as f:
         xs = StreamData(typ="xspress", frames=energyframes)
         ev = EventData(event_number=i, streams={"contrast": ms, "x3mini": xs})
 
-        data = worker.process_event(ev, parameters=parameters)
+        wi = random.randint(0,len(workers)-1)
+        data = workers[wi].process_event(ev, parameters=parameters)
 
         rd = ResultData(
             event_number=i,
-            worker=b'development',
+            worker=f"worker{wi}",
             payload=data,
             parameters_hash="asd",
         )
@@ -125,16 +127,17 @@ with h5py.File("../000008.h5") as f:
     xspress = StreamData(typ="xspress", frames=[xspress_end])
     ev = EventData(event_number=i, streams={"contrast": contrast, "x3mini": xspress})
 
-    data = worker.process_event(ev, parameters=parameters)
+    for wi, worker in enumerate(reversed(workers)):
+        data = worker.process_event(ev, parameters=parameters)
 
-    rd = ResultData(
-        event_number=i,
-        worker=b'development',
-        payload=data,
-        parameters_hash="asd",
-    )
+        rd = ResultData(
+            event_number=i,
+            worker=b'development',
+            payload=data,
+            parameters_hash="asd",
+        )
 
-    reducer.process_result(rd, parameters=parameters)
+        reducer.process_result(rd, parameters=parameters)
 
-    worker.finish(parameters=parameters)
+    [worker.finish(parameters=parameters) for worker in workers]
     reducer.finish(parameters=parameters)
