@@ -6,6 +6,7 @@ from PyMca5.PyMcaIO import ConfigDict
 from PyMca5.PyMcaPhysics.xrf.FastXRFLinearFit import FastXRFLinearFit
 from dranspose.event import EventData
 from dranspose.data.xspress3 import XspressStart
+from dranspose.data.contrast import ContrastRunning
 from dranspose.middlewares import contrast
 from dranspose.middlewares import xspress
 from dranspose.parameters import StrParameter, FileParameter
@@ -39,11 +40,14 @@ class FluorescenceWorker:
             return
         try:
             con = contrast.parse(event.streams["contrast"])
+            if not isinstance(con, ContrastRunning):
+                return {"control": con}
         except Exception as e:
             logger.error("failed to parse contrast %s", e.__repr__())
             return
 
         channel = None
+        spec = None
         try:
             if "xspress3" in event.streams:
                 spec = xspress.parse(event.streams["xspress3"])
@@ -66,7 +70,7 @@ class FluorescenceWorker:
             logger.error("failed to parse x3mini %s", e.__repr__())
             return
 
-        if channel is None:
+        if channel is None or spec is None:
             logger.error("failed to parse xspress3 or x3mini spectrum")
             return
         logger.debug("contrast: %s", con)
