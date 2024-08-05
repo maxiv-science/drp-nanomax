@@ -2,11 +2,10 @@ FROM harbor.maxiv.lu.se/dockerhub/mambaorg/micromamba:1.5.8
 
 COPY --chown=$MAMBA_USER:$MAMBA_USER conda-env.yaml /tmp/env.yaml
 
-ARG MAMBA_DOCKERFILE_ACTIVATE=1
-
 RUN micromamba install -y -n base -f /tmp/env.yaml && \
     micromamba clean --all --yes
 
+ENV PATH "$MAMBA_ROOT_PREFIX/bin:$PATH"
 
 ARG CI_COMMIT_SHA=0000
 ARG CI_COMMIT_REF_NAME=none
