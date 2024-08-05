@@ -1,7 +1,8 @@
 FROM harbor.maxiv.lu.se/dockerhub/mambaorg/micromamba:1.5.8
 
-RUN micromamba install -y -n base -c conda-forge \
-       python=3.12 && \
+COPY --chown=$MAMBA_USER:$MAMBA_USER conda-env.yaml /tmp/env.yaml
+
+RUN micromamba install -y -n base -f /tmp/env.yaml && \
     micromamba clean --all --yes
 
 
@@ -11,8 +12,6 @@ ARG CI_COMMIT_REF_NAME=none
 #ARG CI_COMMIT_MESSAGE=none
 ARG CI_COMMIT_TIMESTAMP=0
 ARG CI_PROJECT_URL=none
-
-azint
 
 WORKDIR /tmp
 
