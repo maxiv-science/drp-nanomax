@@ -3,5 +3,8 @@ channels:
   - maxiv
   - conda-forge
 dependencies:
-  - python=3.12
+  - gcc_linux-64
+  - gxx_linux-64
+  - python=3.11
   - azint
+  - git

@@ -2,10 +2,11 @@ FROM harbor.maxiv.lu.se/dockerhub/mambaorg/micromamba:1.5.8
 
 COPY --chown=$MAMBA_USER:$MAMBA_USER conda-env.yaml /tmp/env.yaml
 
+ARG MAMBA_DOCKERFILE_ACTIVATE=1
+
 RUN micromamba install -y -n base -f /tmp/env.yaml && \
     micromamba clean --all --yes
 
-ARG MAMBA_DOCKERFILE_ACTIVATE=1
 
 ARG CI_COMMIT_SHA=0000
 ARG CI_COMMIT_REF_NAME=none
@@ -14,11 +15,11 @@ ARG CI_COMMIT_REF_NAME=none
 ARG CI_COMMIT_TIMESTAMP=0
 ARG CI_PROJECT_URL=none
 
-WORKDIR /tmp
+#WORKDIR /tmp
 
 COPY requirements.txt /tmp/requirements.txt
 
-RUN python -m pip --no-cache-dir install -r requirements.txt
+RUN python -m pip --no-cache-dir install -r /tmp/requirements.txt
 
 COPY src /tmp/src
 COPY <<EOF /etc/build_git_meta.json
