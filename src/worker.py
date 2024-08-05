@@ -7,10 +7,15 @@ from PyMca5.PyMcaPhysics.xrf.FastXRFLinearFit import FastXRFLinearFit
 from dranspose.event import EventData
 from dranspose.data.xspress3 import XspressStart
 from dranspose.data.contrast import ContrastRunning
+from dranspose.data.stream1 import Stream1Data
 from dranspose.middlewares import contrast
 from dranspose.middlewares import xspress
+from dranspose.middlewares import stream1
 from dranspose.parameters import StrParameter, FileParameter
 import numpy as np
+import azint
+
+from bitshuffle import decompress_lz4
 
 logger = logging.getLogger(__name__)
 
@@ -24,15 +29,44 @@ class FluorescenceWorker:
         ]
         return params
 
-    def __init__(self, parameters=None):
+    def __init__(self, parameters=None, *args, **kwargs):
         self.number = 0
         self.fastFit = FastXRFLinearFit()
-        with tempfile.NamedTemporaryFile() as fp:
-            fp.write(parameters["mca_config_file"].data)
-            self.fastFit.setFitConfigurationFile(fp.name)
+        if "mca_config_file" in parameters:
+            with tempfile.NamedTemporaryFile() as fp:
+                fp.write(parameters["mca_config_file"].data)
+                self.fastFit.setFitConfigurationFile(fp.name)
+        self.ai = None
+        if "poni_file" in parameters:
+            print("par", parameters["poni_file"])
+            with tempfile.NamedTemporaryFile() as fp:
+                fp.write(parameters["poni_file"].data)
+                fp.flush()
+                self.ai = azint.AzimuthalIntegrator(fp.name, 4, 100)
 
     def process_event(self, event: EventData, parameters=None):
         logger.debug("using parameters %s", parameters)
+        ret = {}
+        if "eiger-1m" in event.streams:
+            print("use eiger data fo azint")
+            if self.ai is not None:
+                print(event.streams["eiger-1m"].frames[0])
+                data = stream1.parse(event.streams["eiger-1m"])
+                print(data)
+                if isinstance(data, Stream1Data):
+                    if 'bslz4' in data.compression:
+                        img = decompress_lz4(event.streams["eiger-1m"].frames[1], data.shape, dtype=data.type)
+                        print("decomp", img, img.shape)
+
+                        I, _ = self.ai.integrate(img)
+                        print(I)
+                        ret["azint"] = I
+
+
+            #self.ai.integrate()
+        if len(ret) > 0:
+            return ret
+
         if {"contrast"} - set(event.streams.keys()) != set():
             logger.error(
                 "missing streams for this worker, only present %s", event.streams.keys()

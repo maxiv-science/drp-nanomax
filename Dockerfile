@@ -1,4 +1,9 @@
-FROM python:3
+FROM harbor.maxiv.lu.se/dockerhub/mambaorg/micromamba:1.5.8
+
+RUN micromamba install -y -n base -c conda-forge \
+       python=3.12 && \
+    micromamba clean --all --yes
+
 
 ARG CI_COMMIT_SHA=0000
 ARG CI_COMMIT_REF_NAME=none
@@ -6,6 +11,8 @@ ARG CI_COMMIT_REF_NAME=none
 #ARG CI_COMMIT_MESSAGE=none
 ARG CI_COMMIT_TIMESTAMP=0
 ARG CI_PROJECT_URL=none
+
+azint
 
 WORKDIR /tmp
 
