@@ -14,6 +14,7 @@ from dranspose.middlewares import stream1
 from dranspose.parameters import StrParameter, FileParameter
 import numpy as np
 import azint
+import zmq
 
 from bitshuffle import decompress_lz4
 
