@@ -26,6 +26,7 @@ class FluorescenceWorker:
     def describe_parameters():
         params = [
             FileParameter(name="mca_config"),
+            FileParameter(name="poni"),
         ]
         return params
 
