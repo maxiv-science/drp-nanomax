@@ -1,13 +1,18 @@
-FROM harbor.maxiv.lu.se/dockerhub/mambaorg/micromamba:1.5.8
+FROM harbor.maxiv.lu.se/daq/conda-build:latest AS build
 
-COPY --chown=$MAMBA_USER:$MAMBA_USER conda-env.yaml /tmp/env.yaml
+COPY conda-env.yaml /tmp/env.yaml
 
-RUN micromamba install -y -n base -f /tmp/env.yaml && \
-    micromamba clean --all --yes
+RUN mamba env create -f /tmp/env.yaml  && \
+    conda-pack -n pipeline -o /tmp/env.tar && \
+    mkdir /venv && cd /venv && tar xf /tmp/env.tar && \
+    rm /tmp/env.tar && \
+    /venv/bin/conda-unpack
 
-#RUN micromamba activate
-#ENV PATH "$MAMBA_ROOT_PREFIX/bin:$PATH"
-ARG MAMBA_DOCKERFILE_ACTIVATE=1
+FROM harbor.maxiv.lu.se/dockerhub/library/ubuntu:latest AS runtime
+ENV PATH /venv/bin:$PATH
+COPY --from=build /venv /venv
+
+RUN apt-get update && apt-get install -y build-essential
 
 ARG CI_COMMIT_SHA=0000
 ARG CI_COMMIT_REF_NAME=none
@@ -16,7 +21,7 @@ ARG CI_COMMIT_REF_NAME=none
 ARG CI_COMMIT_TIMESTAMP=0
 ARG CI_PROJECT_URL=none
 
-#WORKDIR /tmp
+WORKDIR /tmp
 
 COPY requirements.txt /tmp/requirements.txt
 
