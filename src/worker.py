@@ -49,18 +49,18 @@ class FluorescenceWorker:
         logger.debug("using parameters %s", parameters)
         ret = {}
         if "eiger-1m" in event.streams:
-            print("use eiger data fo azint")
+            logger.debug("use eiger data for azint")
             if self.ai is not None:
-                print(event.streams["eiger-1m"].frames[0])
                 data = stream1.parse(event.streams["eiger-1m"])
-                print(data)
                 if isinstance(data, Stream1Data):
                     if 'bslz4' in data.compression:
-                        img = decompress_lz4(event.streams["eiger-1m"].frames[1], data.shape, dtype=data.type)
-                        print("decomp", img, img.shape)
-
+                        bufframe = event.streams["eiger-1m"].frames[1]
+                        if isinstance(bufframe, zmq.Frame):
+                            bufframe = bufframe.bytes
+                        img = decompress_lz4(bufframe, data.shape, dtype=data.type)
+                        #print("decomp", img, img.shape)
                         I, _ = self.ai.integrate(img)
-                        print(I)
+                        logger.debug("got I", I.shape)
                         ret["azint"] = I
 
 
