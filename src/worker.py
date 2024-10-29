@@ -11,7 +11,7 @@ from dranspose.data.stream1 import Stream1Data
 from dranspose.middlewares import contrast
 from dranspose.middlewares import xspress
 from dranspose.middlewares import stream1
-from dranspose.parameters import StrParameter, FileParameter
+from dranspose.parameters import StrParameter, BinaryParameter
 import numpy as np
 import azint
 import zmq
@@ -25,8 +25,8 @@ class FluorescenceWorker:
     @staticmethod
     def describe_parameters():
         params = [
-            FileParameter(name="mca_config"),
-            FileParameter(name="poni"),
+            BinaryParameter(name="mca_config"),
+            BinaryParameter(name="poni"),
         ]
         return params
 
@@ -45,7 +45,7 @@ class FluorescenceWorker:
                 fp.flush()
                 self.ai = azint.AzimuthalIntegrator(fp.name, 4, 100)
 
-    def process_event(self, event: EventData, parameters=None):
+    def process_event(self, event: EventData, parameters=None, **kwargs):
         logger.debug("using parameters %s", parameters)
         ret = {}
         if "pilatus" in event.streams:
