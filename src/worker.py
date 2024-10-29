@@ -33,9 +33,9 @@ class FluorescenceWorker:
     def __init__(self, parameters=None, *args, **kwargs):
         self.number = 0
         self.fastFit = FastXRFLinearFit()
-        if "mca_config_file" in parameters:
+        if "mca_config" in parameters:
             with tempfile.NamedTemporaryFile() as fp:
-                fp.write(parameters["mca_config_file"].data)
+                fp.write(parameters["mca_config"].data)
                 self.fastFit.setFitConfigurationFile(fp.name)
         self.ai = None
         if "poni_file" in parameters:
