@@ -12,12 +12,12 @@ FROM harbor.maxiv.lu.se/dockerhub/library/ubuntu:latest AS runtime
 ENV PATH /venv/bin:$PATH
 COPY --from=build /venv /venv
 
+ENV HDF5_PLUGIN_PATH /venv/lib/hdf5/plugin
+
 RUN apt-get update && apt-get install -y build-essential
 
 ARG CI_COMMIT_SHA=0000
 ARG CI_COMMIT_REF_NAME=none
-#ARG CI_COMMIT_AUTHOR=none
-#ARG CI_COMMIT_MESSAGE=none
 ARG CI_COMMIT_TIMESTAMP=0
 ARG CI_PROJECT_URL=none
 
@@ -25,7 +25,7 @@ WORKDIR /tmp
 
 COPY requirements.txt /tmp/requirements.txt
 
-RUN python -m pip --no-cache-dir install -r /tmp/requirements.txt
+RUN python -m pip --no-cache-dir install -r requirements.txt
 
 COPY src /tmp/src
 COPY <<EOF /etc/build_git_meta.json
@@ -36,5 +36,6 @@ COPY <<EOF /etc/build_git_meta.json
 "repository_url": "${CI_PROJECT_URL}"
 }
 EOF
+
 
 CMD ["dranspose"]

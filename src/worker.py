@@ -22,7 +22,6 @@ logger = logging.getLogger(__name__)
 
 
 class FluorescenceWorker:
-
     @staticmethod
     def describe_parameters():
         params = [
@@ -49,23 +48,22 @@ class FluorescenceWorker:
     def process_event(self, event: EventData, parameters=None):
         logger.debug("using parameters %s", parameters)
         ret = {}
-        if "eiger-1m" in event.streams:
+        if "pilatus" in event.streams:
             logger.debug("use eiger data for azint")
             if self.ai is not None:
-                data = stream1.parse(event.streams["eiger-1m"])
+                data = stream1.parse(event.streams["pilatus"])
                 if isinstance(data, Stream1Data):
-                    if 'bslz4' in data.compression:
-                        bufframe = event.streams["eiger-1m"].frames[1]
+                    if "bslz4" in data.compression:
+                        bufframe = event.streams["pilatus"].frames[1]
                         if isinstance(bufframe, zmq.Frame):
                             bufframe = bufframe.bytes
                         img = decompress_lz4(bufframe, data.shape, dtype=data.type)
-                        #print("decomp", img, img.shape)
+                        # print("decomp", img, img.shape)
                         I, _ = self.ai.integrate(img)
-                        logger.debug("got I", I.shape)
+                        logger.info("got I %s", I.shape)
                         ret["azint"] = I
 
-
-            #self.ai.integrate()
+            # self.ai.integrate()
         if len(ret) > 0:
             return ret
 
@@ -117,11 +115,10 @@ class FluorescenceWorker:
             sx, sy = con.pseudo["x"][0], con.pseudo["y"][0]
             logger.debug("process position %s %s", sx, sy)
 
-            #print(spec.data[3])
-            res = self.fastFit.fitMultipleSpectra(y=channel,
-                                       weight=0,
-                                       refit=1,
-                                       concentrations=1)
+            # print(spec.data[3])
+            res = self.fastFit.fitMultipleSpectra(
+                y=channel, weight=0, refit=1, concentrations=1
+            )
 
             result = res.__dict__
             del result["_labelFormats"]

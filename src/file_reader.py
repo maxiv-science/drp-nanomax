@@ -33,14 +33,14 @@ def build_frame(dsets: list[Dataset]):
         i += 1
 
 
-#cfg = ConfigDict.ConfigDict()
+# cfg = ConfigDict.ConfigDict()
 with open("../fit_config_scan_000027_0.1_second_some_elements_removed.cfg", "rb") as f:
     content = f.read()
-#ffile =
-#cfg.read(ffile)
+# ffile =
+# cfg.read(ffile)
 
 
-parameters={"mca_config_file": WorkParameter(name="mca_config_file", data=content)}
+parameters = {"mca_config_file": WorkParameter(name="mca_config_file", data=content)}
 
 with h5py.File("../000008.h5") as f:
     # print(f["entry/measurement"].keys())
@@ -56,14 +56,16 @@ with h5py.File("../000008.h5") as f:
     )
     energygen = build_frame([f["entry/measurement/xspress3/data"]])
 
-    workers = [FluorescenceWorker(parameters=parameters) for  _ in range(2)]
+    workers = [FluorescenceWorker(parameters=parameters) for _ in range(2)]
     reducer = FluorescenceReducer(parameters=parameters)
 
     i = 0
 
-    contrast_start = pickle.dumps(ContrastStarted(path="", scannr=4, description="stepscan"))
+    contrast_start = pickle.dumps(
+        ContrastStarted(path="", scannr=4, description="stepscan")
+    )
     contrast = StreamData(typ="contrast", frames=[contrast_start])
-    xspress_start = json.dumps({'htype': 'header','filename':""})
+    xspress_start = json.dumps({"htype": "header", "filename": ""})
     xspress = StreamData(typ="xspress", frames=[xspress_start])
     ev = EventData(event_number=i, streams={"contrast": contrast, "x3mini": xspress})
 
@@ -78,7 +80,7 @@ with h5py.File("../000008.h5") as f:
 
         reducer.process_result(rd, parameters=parameters)
 
-    i+= 1
+    i += 1
     while True:
         try:
             pos = next(positiongen)
@@ -86,25 +88,31 @@ with h5py.File("../000008.h5") as f:
         except StopIteration:
             break
 
-        ehdr = {'htype': 'image',
-                "type": str(energy["data"].dtype),
-                "shape": energy["data"].shape,
-                "frame": i-1}
+        ehdr = {
+            "htype": "image",
+            "type": str(energy["data"].dtype),
+            "shape": energy["data"].shape,
+            "frame": i - 1,
+        }
 
         energyframes = [
             zmq.Frame(json.dumps(ehdr).encode("utf8")),
             zmq.Frame(energy["data"].data),
-            zmq.Frame(pickle.dumps(["bla"]))
+            zmq.Frame(pickle.dumps(["bla"])),
         ]
 
-        #posframe = zmq.Frame(json.dumps(pos).encode("utf8"))
-        ctr = {"pseudo":{k:np.array([v]) for k,v in pos.items()}, "status":"running", "dt":0.4}
+        # posframe = zmq.Frame(json.dumps(pos).encode("utf8"))
+        ctr = {
+            "pseudo": {k: np.array([v]) for k, v in pos.items()},
+            "status": "running",
+            "dt": 0.4,
+        }
 
         ms = StreamData(typ="contrast", frames=[zmq.Frame(pickle.dumps(ctr))])
         xs = StreamData(typ="xspress", frames=energyframes)
         ev = EventData(event_number=i, streams={"contrast": ms, "x3mini": xs})
 
-        wi = random.randint(0,len(workers)-1)
+        wi = random.randint(0, len(workers) - 1)
         data = workers[wi].process_event(ev, parameters=parameters)
 
         rd = ResultData(
@@ -118,12 +126,12 @@ with h5py.File("../000008.h5") as f:
 
         i += 1
         if i == 3:
-            #break
+            # break
             pass
 
-    contrast_end = pickle.dumps({'status': 'finished'})
+    contrast_end = pickle.dumps({"status": "finished"})
     contrast = StreamData(typ="contrast", frames=[contrast_end])
-    xspress_end = json.dumps({'htype': 'series_end'})
+    xspress_end = json.dumps({"htype": "series_end"})
     xspress = StreamData(typ="xspress", frames=[xspress_end])
     ev = EventData(event_number=i, streams={"contrast": contrast, "x3mini": xspress})
 
@@ -132,7 +140,7 @@ with h5py.File("../000008.h5") as f:
 
         rd = ResultData(
             event_number=i,
-            worker=b'development',
+            worker=b"development",
             payload=data,
             parameters_hash="asd",
         )
