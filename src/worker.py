@@ -122,7 +122,7 @@ class FluorescenceWorker:
 
             result = res.__dict__
             del result["_labelFormats"]
-            return {"position": (sx, sy), "fit": result}
+            return {"position": (sx, sy), "fit": result["_buffers"]}
 
     def finish(self, parameters=None):
         print("finished")

@@ -7,7 +7,7 @@ import h5py
 from bitshuffle import decompress_lz4, compress_lz4
 
 
-class FluorescenceSource:
+class PilatusSource:
     def __init__(self):
         # self.fd = h5py.File("../000008.h5")
         pass

@@ -8,38 +8,7 @@ import h5pyd
 from dranspose.replay import replay
 
 
-def est_replay():
-    stop_event = threading.Event()
-    done_event = threading.Event()
-
-    thread = threading.Thread(
-        target=replay,
-        args=(
-            "src.worker:FluorescenceWorker",
-            "src.reducer:FluorescenceReducer",
-            None,
-            "src.hdf5_sources:PilatusSource",
-            "params.json",
-        ),
-        kwargs={"port": 5010, "stop_event": stop_event, "done_event": done_event},
-    )
-    thread.start()
-
-    # do live queries
-
-    done_event.wait()
-
-    f = h5pyd.File("http://localhost:5010/", "r")
-    logging.info("file %s", list(f.keys()))
-    logging.info("azint %s", f["azint/data"])
-    assert list(f["azint/data"].shape) == [10, 100]
-
-    stop_event.set()
-
-    thread.join()
-
-
-def test_contrast(tmp_path):
+def test_map(tmp_path):
     stop_event = threading.Event()
     done_event = threading.Event()
 
@@ -59,8 +28,8 @@ def test_contrast(tmp_path):
         args=(
             "src.worker:FluorescenceWorker",
             "src.reducer:FluorescenceReducer",
-            glob("data/*_ingest.pkls"),
             None,
+            "src.xrf_source:XRFSource",
             bin_file,
         ),
         kwargs={"port": 5010, "stop_event": stop_event, "done_event": done_event},
@@ -73,6 +42,12 @@ def test_contrast(tmp_path):
 
     f = h5pyd.File("http://localhost:5010/", "r")
     logging.info("file %s", list(f.keys()))
+    logging.info("map %s", f["map"])
+    logging.info("map x %s", f["map/x"])
+    logging.info("map y %s", f["map/y"])
+    logging.info("map v %s", f["map/values"])
+    logging.info("map v %s", f["map/x"][:])
+    # assert list(f["azint/data"].shape) == [10, 100]
 
     stop_event.set()
 
