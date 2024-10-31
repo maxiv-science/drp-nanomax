@@ -63,6 +63,7 @@ class FluorescenceWorker:
         logger.debug("using parameters %s", parameters)
         ret = {}
 
+        pcap = None
         if "pcap" in event.streams:
             pcap = self.pcap.parse(event.streams["pcap"])
 
