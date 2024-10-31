@@ -40,7 +40,10 @@ def test_map(tmp_path):
             "data/fit_config_scan_000027_0.1_second_some_elements_removed.cfg", "rb"
         ) as cf:
             pickle.dump(
-                [{"name": "mca_config", "data": cf.read()}],
+                [
+                    {"name": "mca_config", "data": cf.read()},
+                    {"name": "pcap_channel_y", "data": "INENC3.VAL.Mean"},
+                ],
                 f,
             )
 

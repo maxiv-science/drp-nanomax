@@ -28,6 +28,8 @@ class FluorescenceWorker:
     def describe_parameters():
         params = [
             BinaryParameter(name="poni"),
+            StrParameter(name="pcap_channel_x", default="INENC2.VAL.Mean"),
+            StrParameter(name="pcap_channel_y", default="INENC3.VAL.Mean"),
         ]
         return params
 
@@ -137,8 +139,8 @@ class FluorescenceWorker:
             sx, sy = con.pseudo["x"][0], con.pseudo["y"][0]
             if isinstance(pcap, PositionCapValues):
                 logger.warning("pcap got %s", pcap)
-                px = pcap.fields["INENC2.VAL.Mean"].value
-                py = pcap.fields["INENC3.VAL.Mean"].value
+                px = pcap.fields[parameters["pcap_channel_x"].value].value
+                py = pcap.fields[parameters["pcap_channel_y"].value].value
                 assert sx == px
                 assert sy == py
             logger.debug("process position %s %s", sx, sy)
