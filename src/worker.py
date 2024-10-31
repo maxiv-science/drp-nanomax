@@ -8,9 +8,11 @@ from dranspose.event import EventData
 from dranspose.data.xspress3 import XspressStart
 from dranspose.data.contrast import ContrastRunning
 from dranspose.data.stream1 import Stream1Data
+from dranspose.data.positioncap import PositionCapValues
 from dranspose.middlewares import contrast
 from dranspose.middlewares import xspress
 from dranspose.middlewares import stream1
+from dranspose.middlewares.positioncap import PositioncapParser
 from dranspose.parameters import StrParameter, BinaryParameter
 import numpy as np
 import azint
@@ -32,6 +34,7 @@ class FluorescenceWorker:
     def __init__(self, parameters=None, *args, **kwargs):
         self.number = 0
         self.ai = None
+        self.pcap = PositioncapParser()
         if "poni_file" in parameters:
             print("par", parameters["poni_file"])
             with tempfile.NamedTemporaryFile() as fp:
@@ -39,9 +42,7 @@ class FluorescenceWorker:
                 fp.flush()
                 self.ai = azint.AzimuthalIntegrator(fp.name, 4, 100)
 
-    def process_event(self, event: EventData, parameters=None, **kwargs):
-        logger.debug("using parameters %s", parameters)
-        ret = {}
+    def _azint(self, event):
         if "pilatus" in event.streams:
             logger.debug("use eiger data for azint")
             if self.ai is not None:
@@ -55,9 +56,18 @@ class FluorescenceWorker:
                         # print("decomp", img, img.shape)
                         I, _ = self.ai.integrate(img)
                         logger.info("got I %s", I.shape)
-                        ret["azint"] = I
+                        return {"azint": I}
+        return {}
 
-            # self.ai.integrate()
+    def process_event(self, event: EventData, parameters=None, **kwargs):
+        logger.debug("using parameters %s", parameters)
+        ret = {}
+
+        if "pcap" in event.streams:
+            pcap = self.pcap.parse(event.streams["pcap"])
+
+        ret.update(self._azint(event))
+
         if len(ret) > 0:
             return ret
 
@@ -107,6 +117,12 @@ class FluorescenceWorker:
         if con.status == "running":
             # new data
             sx, sy = con.pseudo["x"][0], con.pseudo["y"][0]
+            if isinstance(pcap, PositionCapValues):
+                logger.warning("pcap got %s", pcap)
+                px = pcap.fields["INENC2.VAL.Mean"].value
+                py = pcap.fields["INENC3.VAL.Mean"].value
+                assert sx == px
+                assert sy == py
             logger.debug("process position %s %s", sx, sy)
 
             # print(spec.data[3])

@@ -1,3 +1,4 @@
+import datetime
 import itertools
 import logging
 
@@ -5,6 +6,12 @@ import numpy as np
 from dranspose.event import InternalWorkerMessage, StreamData
 from dranspose.data.xspress3 import XspressStart, XspressImage, XspressEnd
 from dranspose.data.contrast import ContrastStarted, ContrastRunning, ContrastFinished
+from dranspose.data.positioncap import (
+    PositionCapStart,
+    PositionCapField,
+    PositionCapValues,
+    PositionCapEnd,
+)
 
 import h5py
 
@@ -15,7 +22,7 @@ class XRFSource:
         self.slice = slice(10)
 
     def get_source_generators(self):
-        return [self.xspress_source(), self.contrast_source()]
+        return [self.xspress_source(), self.contrast_source(), self.pcap_source()]
 
     def xspress_source(self):
         start = XspressStart(filename="")
@@ -73,4 +80,39 @@ class XRFSource:
         yield InternalWorkerMessage(
             event_number=frameno,
             streams={"contrast": end.to_stream_data()},
+        )
+
+    def pcap_source(self):
+        fields = [
+            PositionCapField(name="INENC2.VAL.Mean", type="double"),
+            PositionCapField(name="INENC3.VAL.Mean", type="double"),
+            PositionCapField(name="PCAP.TS_TRIG.Value", type="double"),
+        ]
+        start = PositionCapStart(arm_time=datetime.datetime.utcnow())
+        yield InternalWorkerMessage(
+            event_number=0,
+            streams={"pcap": start.to_stream_data(fields)},
+        )
+
+        frameno = 0
+        for data in zip(
+            self.fd["/entry/measurement/panda0/INENC2.VAL_Mean"][self.slice],
+            self.fd["/entry/measurement/panda0/INENC3.VAL_Mean"][self.slice],
+            self.fd["/entry/measurement/panda0/PCAP.TS_TRIG_Value"][self.slice],
+        ):
+            for f, d in zip(fields, data):
+                f.value = d
+
+            logging.warning("fields are %s", fields)
+            val = PositionCapValues(fields={f.name: f for f in fields})
+            yield InternalWorkerMessage(
+                event_number=frameno + 1,
+                streams={"pcap": val.to_stream_data()},
+            )
+            frameno += 1
+
+        end = PositionCapEnd()
+        yield InternalWorkerMessage(
+            event_number=frameno,
+            streams={"pcap": end.to_stream_data()},
         )

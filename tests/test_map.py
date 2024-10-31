@@ -8,6 +8,27 @@ import h5pyd
 from dranspose.replay import replay
 
 
+def test_map_only(tmp_path):
+    bin_file = tmp_path / "binparams.pkl"
+
+    with open(bin_file, "wb") as f:
+        with open(
+            "data/fit_config_scan_000027_0.1_second_some_elements_removed.cfg", "rb"
+        ) as cf:
+            pickle.dump(
+                [{"name": "mca_config", "data": cf.read()}],
+                f,
+            )
+
+    replay(
+        "src.worker:FluorescenceWorker",
+        "src.reducer:FluorescenceReducer",
+        None,
+        "src.xrf_source:XRFSource",
+        bin_file,
+    )
+
+
 def test_map(tmp_path):
     stop_event = threading.Event()
     done_event = threading.Event()
@@ -40,7 +61,7 @@ def test_map(tmp_path):
 
     done_event.wait()
 
-    time.sleep(1)  # let the last timer run
+    time.sleep(3)  # let the last timer run
 
     slicelen = 10
 
