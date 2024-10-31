@@ -44,7 +44,7 @@ class FluorescenceWorker:
 
     def _azint(self, event):
         if "pilatus" in event.streams:
-            logger.debug("use eiger data for azint")
+            logger.debug("use pilatus data for azint")
             if self.ai is not None:
                 data = stream1.parse(event.streams["pilatus"])
                 if isinstance(data, Stream1Data):
@@ -59,6 +59,22 @@ class FluorescenceWorker:
                         return {"azint": I}
         return {}
 
+    def _eigers(self, event):
+        ret = {}
+        for stream in ["eiger-4m", "eiger-1m"]:
+            if stream in event.streams:
+                data = stream1.parse(event.streams[stream])
+                if isinstance(data, Stream1Data):
+                    if "bslz4" in data.compression:
+                        bufframe = event.streams[stream].frames[1]
+                        if isinstance(bufframe, zmq.Frame):
+                            bufframe = bufframe.bytes
+                        data.data = decompress_lz4(
+                            bufframe, data.shape, dtype=data.type
+                        )
+                logger.info("got %s %s", stream, data)
+        return ret
+
     def process_event(self, event: EventData, parameters=None, **kwargs):
         logger.debug("using parameters %s", parameters)
         ret = {}
@@ -68,6 +84,7 @@ class FluorescenceWorker:
             pcap = self.pcap.parse(event.streams["pcap"])
 
         ret.update(self._azint(event))
+        ret.update(self._eigers(event))
 
         if len(ret) > 0:
             return ret
