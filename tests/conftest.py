@@ -9,3 +9,10 @@ def pytest_addoption(parser: Parser) -> None:
         default=False,
         help="enable long running tests (excluded in CI)",
     )
+    parser.addoption(
+        "--dev",
+        action="store_true",
+        dest="dev",
+        default=False,
+        help="enable development tests (excluded in CI)",
+    )

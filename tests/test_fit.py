@@ -288,7 +288,11 @@ class SingleFit(FastXRFLinearFit):
             logging.warning("iterations %d", iIter)
 
 
-def est_batch():
+@pytest.mark.skipif(
+    "not config.getoption('dev')",
+    reason="explicitly enable --dev elopment tests",
+)
+def test_batch():
     trigger = 300
     fastFit = SingleFit()
     fastFit.setFitConfigurationFile(
@@ -321,8 +325,12 @@ def est_batch():
     result = res
 
 
+@pytest.mark.skipif(
+    "not config.getoption('dev')",
+    reason="explicitly enable --dev elopment tests",
+)
 # @pytest.mark.parametrize("trigger", [100,400,523,1109])
-def est_seq():
+def test_seq():
     trigger = 300
     fastFit = SingleFit()
     fastFit.setFitConfigurationFile(
@@ -369,7 +377,11 @@ def est_seq():
             assert np.isclose(v, massfrac)
 
 
-def est_fit():
+@pytest.mark.skipif(
+    "not config.getoption('dev')",
+    reason="explicitly enable --dev elopment tests",
+)
+def test_fit():
     fastFit = FastXRFLinearFit()
     fastFit.setFitConfigurationFile(
         "data/fit_config_scan_000027_0.1_second_some_elements_removed.cfg"
@@ -389,7 +401,11 @@ def est_fit():
     # assert round(result["_buffers"]["massfractions"][5][0],6) == round(3.0883595e-7,6)
 
 
-def est_fullbatch():
+@pytest.mark.skipif(
+    "not config.getoption('dev')",
+    reason="explicitly enable --dev elopment tests",
+)
+def test_fullbatch():
     fastFit = FastXRFLinearFit()
     fastFit.setFitConfigurationFile(
         "data/fit_config_scan_000027_0.1_second_some_elements_removed.cfg"
@@ -445,9 +461,13 @@ def est_fullbatch():
         )
 
 
+@pytest.mark.skipif(
+    "not config.getoption('dev')",
+    reason="explicitly enable --dev elopment tests",
+)
 # this test just makes sure that the batch doesn't do magic and fitting one by one give the same result as a batch
 @pytest.mark.parametrize("trigger", [100, 400, 523, 1110])
-def est_iterative(trigger):
+def test_iterative(trigger):
     fastFit = SingleFit()
     fastFit.setFitConfigurationFile(
         "data/fit_config_scan_000027_0.1_second_some_elements_removed.cfg"
