@@ -116,3 +116,9 @@ class XRFSource:
             event_number=frameno,
             streams={"pcap": end.to_stream_data()},
         )
+
+
+class XRFSource60(XRFSource):
+    def __init__(self):
+        self.fd = h5py.File("data/000060.h5")
+        self.slice = slice(None)
