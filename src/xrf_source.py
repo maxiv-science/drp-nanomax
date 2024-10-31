@@ -18,7 +18,6 @@ class XRFSource:
                 zf.extract("scan_000008_xspress3.hdf5", path="data")
 
         self.fd = h5py.File("data/000008.h5")
-        self.lim = 10
 
     def get_source_generators(self):
         return [self.xspress_source(), self.contrast_source()]
@@ -32,7 +31,7 @@ class XRFSource:
 
         frameno = 0
 
-        for image in self.fd["/entry/measurement/xspress3/data"][: self.lim]:
+        for image in self.fd["/entry/measurement/xspress3/data"]:
             img = XspressImage(
                 frame=frameno,
                 shape=image.shape,
@@ -63,8 +62,8 @@ class XRFSource:
         frameno = 0
 
         for x, y in zip(
-            self.fd["/entry/measurement/pseudo/x"][: self.lim],
-            self.fd["/entry/measurement/pseudo/y"][: self.lim],
+            self.fd["/entry/measurement/pseudo/x"],
+            self.fd["/entry/measurement/pseudo/y"],
         ):
             img = ContrastRunning(
                 dt=0.1, pseudo={"x": np.array([x]), "y": np.array([y])}

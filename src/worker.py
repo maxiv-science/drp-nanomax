@@ -25,18 +25,12 @@ class FluorescenceWorker:
     @staticmethod
     def describe_parameters():
         params = [
-            BinaryParameter(name="mca_config"),
             BinaryParameter(name="poni"),
         ]
         return params
 
     def __init__(self, parameters=None, *args, **kwargs):
         self.number = 0
-        self.fastFit = FastXRFLinearFit()
-        if "mca_config" in parameters:
-            with tempfile.NamedTemporaryFile() as fp:
-                fp.write(parameters["mca_config"].data)
-                self.fastFit.setFitConfigurationFile(fp.name)
         self.ai = None
         if "poni_file" in parameters:
             print("par", parameters["poni_file"])
@@ -116,13 +110,7 @@ class FluorescenceWorker:
             logger.debug("process position %s %s", sx, sy)
 
             # print(spec.data[3])
-            res = self.fastFit.fitMultipleSpectra(
-                y=channel, weight=0, refit=1, concentrations=1
-            )
-
-            result = res.__dict__
-            del result["_labelFormats"]
-            return {"position": (sx, sy), "fit": result["_buffers"]}
+            return {"position": (sx, sy), "spectrum": channel}
 
     def finish(self, parameters=None):
         print("finished")
