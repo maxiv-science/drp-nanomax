@@ -1,7 +1,5 @@
 import itertools
 import logging
-import os.path
-import zipfile
 
 import numpy as np
 from dranspose.event import InternalWorkerMessage, StreamData
@@ -13,10 +11,6 @@ import h5py
 
 class XRFSource:
     def __init__(self):
-        if not os.path.exists("data/scan_000008_xspress3.hdf5"):
-            with zipfile.ZipFile("data/smallspec.zip") as zf:
-                zf.extract("scan_000008_xspress3.hdf5", path="data")
-
         self.fd = h5py.File("data/000008.h5")
 
     def get_source_generators(self):

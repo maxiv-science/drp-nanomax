@@ -288,7 +288,7 @@ class SingleFit(FastXRFLinearFit):
             logging.warning("iterations %d", iIter)
 
 
-def test_batch():
+def est_batch():
     trigger = 300
     fastFit = SingleFit()
     fastFit.setFitConfigurationFile(
