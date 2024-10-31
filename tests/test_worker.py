@@ -8,7 +8,7 @@ import h5pyd
 from dranspose.replay import replay
 
 
-def est_replay():
+def test_pilatus():
     stop_event = threading.Event()
     done_event = threading.Event()
 
