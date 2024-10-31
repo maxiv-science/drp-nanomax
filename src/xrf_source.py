@@ -12,6 +12,7 @@ import h5py
 class XRFSource:
     def __init__(self):
         self.fd = h5py.File("data/000008.h5")
+        self.slice = slice(10)
 
     def get_source_generators(self):
         return [self.xspress_source(), self.contrast_source()]
@@ -25,7 +26,7 @@ class XRFSource:
 
         frameno = 0
 
-        for image in self.fd["/entry/measurement/xspress3/data"]:
+        for image in self.fd["/entry/measurement/xspress3/data"][self.slice]:
             img = XspressImage(
                 frame=frameno,
                 shape=image.shape,
@@ -56,8 +57,8 @@ class XRFSource:
         frameno = 0
 
         for x, y in zip(
-            self.fd["/entry/measurement/pseudo/x"],
-            self.fd["/entry/measurement/pseudo/y"],
+            self.fd["/entry/measurement/pseudo/x"][self.slice],
+            self.fd["/entry/measurement/pseudo/y"][self.slice],
         ):
             img = ContrastRunning(
                 dt=0.1, pseudo={"x": np.array([x]), "y": np.array([y])}
