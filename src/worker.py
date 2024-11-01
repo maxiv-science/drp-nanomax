@@ -77,7 +77,7 @@ class FluorescenceWorker:
                 logger.info("got %s %s", stream, data)
         return ret
 
-    def process_event(self, event: EventData, parameters=None, **kwargs):
+    def process_event(self, event: EventData, parameters=None, *args, **kwargs):
         logger.debug("using parameters %s", parameters)
         ret = {}
 
