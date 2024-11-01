@@ -91,18 +91,19 @@ class FluorescenceWorker:
         if len(ret) > 0:
             return ret
 
+        con = None
         if {"contrast"} - set(event.streams.keys()) != set():
             logger.error(
                 "missing streams for this worker, only present %s", event.streams.keys()
             )
-            return
+        #    return
         try:
             con = contrast.parse(event.streams["contrast"])
             if not isinstance(con, ContrastRunning):
                 return {"control": con}
         except Exception as e:
             logger.error("failed to parse contrast %s", e.__repr__())
-            return
+            # return
 
         channel = None
         spec = None
@@ -134,19 +135,20 @@ class FluorescenceWorker:
         logger.debug("contrast: %s", con)
         logger.debug("spectrum: %s", spec)
 
-        if con.status == "running":
-            # new data
-            sx, sy = con.pseudo["x"][0], con.pseudo["y"][0]
+        if con is not None:
+            if con.status == "running":
+                # new data
+                sx, sy = con.pseudo["x"][0], con.pseudo["y"][0]
+                logger.debug("process position %s %s", sx, sy)
+
+                # print(spec.data[3])
+                return {"position": (sx, sy), "spectrum": channel}
+        else:
             if isinstance(pcap, PositionCapValues):
                 logger.warning("pcap got %s", pcap)
                 px = pcap.fields[parameters["pcap_channel_x"].value].value
                 py = pcap.fields[parameters["pcap_channel_y"].value].value
-                assert sx == px
-                assert sy == py
-            logger.debug("process position %s %s", sx, sy)
-
-            # print(spec.data[3])
-            return {"position": (sx, sy), "spectrum": channel}
+                return {"position": (px, py), "spectrum": channel}
 
     def finish(self, parameters=None):
         print("finished")
