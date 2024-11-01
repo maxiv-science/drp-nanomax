@@ -32,7 +32,7 @@ def test_map(tmp_path):
             "src.worker:FluorescenceWorker",
             "src.reducer:FluorescenceReducer",
             None,
-            "src.xrf_source:XRFSource60",
+            "src.xrf_source:XRFSourceFly60",
             bin_file,
         ),
         kwargs={"port": 5010, "stop_event": stop_event, "done_event": done_event},

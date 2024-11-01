@@ -91,7 +91,7 @@ class XRFSource:
         start = PositionCapStart(arm_time=datetime.datetime.utcnow())
         yield InternalWorkerMessage(
             event_number=0,
-            streams={"pcap": start.to_stream_data(fields)},
+            streams={"panda0": start.to_stream_data(fields)},
         )
 
         frameno = 0
@@ -103,18 +103,17 @@ class XRFSource:
             for f, d in zip(fields, data):
                 f.value = d
 
-            logging.warning("fields are %s", fields)
             val = PositionCapValues(fields={f.name: f for f in fields})
             yield InternalWorkerMessage(
                 event_number=frameno + 1,
-                streams={"pcap": val.to_stream_data()},
+                streams={"panda0": val.to_stream_data()},
             )
             frameno += 1
 
         end = PositionCapEnd()
         yield InternalWorkerMessage(
             event_number=frameno,
-            streams={"pcap": end.to_stream_data()},
+            streams={"panda0": end.to_stream_data()},
         )
 
 
@@ -122,3 +121,97 @@ class XRFSource60(XRFSource):
     def __init__(self):
         self.fd = h5py.File("data/000060.h5")
         self.slice = slice(None)
+
+
+class XRFSourceFly60:
+    """
+    the fly scan arms the panda box for every line
+    """
+
+    def __init__(self):
+        self.fd = h5py.File("data/000060.h5")
+        self.width = 121
+        self.rows = 126
+
+    def get_source_generators(self):
+        return [self.xspress_source(), self.pcap_source()]
+
+    def xspress_source(self):
+        start = XspressStart(filename="")
+        yield InternalWorkerMessage(
+            event_number=0,
+            streams={"xspress3": start.to_stream_data()},
+        )
+
+        frameno = 0
+        evn = 0
+        line = 0
+        for image in self.fd["/entry/measurement/xspress3/data"][:]:
+            if line == self.width:
+                evn += 2
+                line = 0
+            line += 1
+            img = XspressImage(
+                frame=frameno,
+                shape=image.shape,
+                compression="none",
+                type=str(image.dtype),
+                data=image,
+                meta={},
+            )
+            frameno += 1
+            yield InternalWorkerMessage(
+                event_number=evn + 1,
+                streams={"xspress3": img.to_stream_data()},
+            )
+            evn += 1
+
+        end = XspressEnd()
+        yield InternalWorkerMessage(
+            event_number=evn,
+            streams={"xspress3": end.to_stream_data()},
+        )
+
+    def pcap_source(self):
+        # shape 121 * 126
+        evn = 0
+        for row in range(self.rows):
+            fields = [
+                PositionCapField(name="INENC2.VAL.Mean", type="double"),
+                PositionCapField(name="INENC3.VAL.Mean", type="double"),
+                PositionCapField(name="PCAP.TS_TRIG.Value", type="double"),
+            ]
+            start = PositionCapStart(arm_time=datetime.datetime.utcnow())
+            yield InternalWorkerMessage(
+                event_number=evn,
+                streams={"panda0": start.to_stream_data(fields)},
+            )
+            evn += 1
+
+            for data in zip(
+                self.fd["/entry/measurement/panda0/INENC2.VAL_Mean"][
+                    row * self.width : (row + 1) * self.width
+                ],
+                self.fd["/entry/measurement/panda0/INENC3.VAL_Mean"][
+                    row * self.width : (row + 1) * self.width
+                ],
+                self.fd["/entry/measurement/panda0/PCAP.TS_TRIG_Value"][
+                    row * self.width : (row + 1) * self.width
+                ],
+            ):
+                for f, d in zip(fields, data):
+                    f.value = d
+
+                val = PositionCapValues(fields={f.name: f for f in fields})
+                yield InternalWorkerMessage(
+                    event_number=evn,
+                    streams={"panda0": val.to_stream_data()},
+                )
+                evn += 1
+
+            end = PositionCapEnd()
+            yield InternalWorkerMessage(
+                event_number=evn,
+                streams={"panda0": end.to_stream_data()},
+            )
+            evn += 1
