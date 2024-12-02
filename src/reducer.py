@@ -57,11 +57,14 @@ class FluorescenceReducer:
                 positions = [b[0] for b in self.buffer]
                 self.buffer = []
         if spectra is not None:
-            logger.warning("process spectra %s", spectra.shape)
-            res = self.fastFit.fitMultipleSpectra(
-                y=spectra, weight=0, refit=1, concentrations=1
-            )
-
+            logger.info("process spectra %s", spectra.shape)
+            try:
+                res = self.fastFit.fitMultipleSpectra(
+                    y=spectra, weight=0, refit=1, concentrations=1
+                )
+            except ValueError as e:
+                logger.warning("unable to fit spectra: %s", e.__repr__())
+                return 0.5
             result = res.__dict__
 
             for maptype in result["_buffers"]:
