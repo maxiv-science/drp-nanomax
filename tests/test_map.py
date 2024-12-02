@@ -1,8 +1,8 @@
 import logging
-import pickle
 import threading
 import time
 from glob import glob
+import cbor2
 
 import h5pyd
 from dranspose.replay import replay
@@ -15,7 +15,7 @@ def test_map_only(tmp_path):
         with open(
             "data/fit_config_scan_000027_0.1_second_some_elements_removed.cfg", "rb"
         ) as cf:
-            pickle.dump(
+            cbor2.dump(
                 [{"name": "mca_config", "data": cf.read()}],
                 f,
             )
@@ -39,7 +39,7 @@ def test_map(tmp_path):
         with open(
             "data/fit_config_scan_000027_0.1_second_some_elements_removed.cfg", "rb"
         ) as cf:
-            pickle.dump(
+            cbor2.dump(
                 [
                     {"name": "mca_config", "data": cf.read()},
                     {"name": "pcap_channel_y", "data": "INENC3.VAL.Mean"},

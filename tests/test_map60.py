@@ -1,5 +1,5 @@
 import logging
-import pickle
+import cbor2
 import threading
 import time
 from glob import glob
@@ -17,11 +17,11 @@ def test_map(tmp_path):
     stop_event = threading.Event()
     done_event = threading.Event()
 
-    bin_file = tmp_path / "binparams.pkl"
+    bin_file = tmp_path / "binparams.cbor"
 
     with open(bin_file, "wb") as f:
         with open("data/0001_setup_000060.cfg", "rb") as cf:
-            pickle.dump(
+            cbor2.dump(
                 [{"name": "mca_config", "data": cf.read()}],
                 f,
             )

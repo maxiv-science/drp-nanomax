@@ -1,5 +1,4 @@
 import logging
-import pickle
 import threading
 import time
 from glob import glob
