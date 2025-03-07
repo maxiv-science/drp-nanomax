@@ -1,6 +1,8 @@
-FROM harbor.maxiv.lu.se/daq/conda-build:latest AS build
+FROM registry.gitlab.com/tango-controls/docker/conda-build:latest AS build
 
 COPY conda-env.yaml /tmp/env.yaml
+
+RUN mamba install conda-pack
 
 RUN mamba env create -f /tmp/env.yaml  && \
     conda-pack -n pipeline -o /tmp/env.tar && \
@@ -8,7 +10,7 @@ RUN mamba env create -f /tmp/env.yaml  && \
     rm /tmp/env.tar && \
     /venv/bin/conda-unpack
 
-FROM harbor.maxiv.lu.se/dockerhub/library/ubuntu:latest AS runtime
+FROM docker.io/library/ubuntu:latest AS runtime
 ENV PATH /venv/bin:$PATH
 COPY --from=build /venv /venv
 
