@@ -108,7 +108,7 @@ Some tests are skipped and only run if you provide the `--long` option. They kee
 Build the docker image:
 
     podman build -t drp-nanomax .
-    
+
 Then start a container from the newly created image. It also mounts the current directory (this git repo) into the container:
 
     podman run --rm -it -v ".:/mnt" localhost/drp-nanomax:latest /bin/bash
@@ -116,9 +116,9 @@ Then start a container from the newly created image. It also mounts the current 
 Inside the container shell, install pytest:
 
     python -m pip install pytest pytest-cov
-    
+
 Then run the tests themselves:
 
     pytest --cov=src --cov-branch --cov-report term-missing --cov-report html --log-cli-level=INFO
-    
+
 As the outside directory is bind mounted, you should be able to change code outside the container and rerun the tests inside.
